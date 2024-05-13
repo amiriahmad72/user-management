@@ -3,3 +3,12 @@ services:
     image: mongo
     ports:
       - 27017:27017
+  rabbitmq:
+    image: rabbitmq:3.12.14-management-alpine
+    container_name: 'rabbitmq'
+    environment:
+      RABBITMQ_DEFAULT_USER: "rabbitmq"
+      RABBITMQ_DEFAULT_PASS: "rabbitmq"
+    ports:
+        - 5672:5672
+        - 15672:15672

@@ -5,16 +5,22 @@ import { EmailService } from 'src/email/email.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
+import { EventProducerService } from 'src/queue/event-producer/event-producer.service';
 
 @Injectable()
 export class UsersService {
 
-  constructor(@InjectModel(User.name) private readonly userModel: Model<User>, private readonly emailService: EmailService) { }
+  constructor(
+    @InjectModel(User.name) private readonly userModel: Model<User>,
+    private readonly emailService: EmailService,
+    private readonly eventProducerService: EventProducerService
+  ) { }
 
   async create(createUserDto: CreateUserDto): Promise<User> {
     const createdUser = new this.userModel(createUserDto);
     const savedUser = await createdUser.save();
     this.emailService.sendUserWelcome(savedUser);
+    this.eventProducerService.addUserToRegistrationQueue(savedUser);
     return savedUser;
   }
 
