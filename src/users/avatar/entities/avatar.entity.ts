@@ -7,13 +7,13 @@ export type AvatarDocument = HydratedDocument<Avatar>;
 @Schema()
 export class Avatar extends Document {
 
-  @Prop({ required: true })
+  @Prop({ unique: true, required: true })
   userId: string;
 
   @Prop({ required: true })
   hash: string;
 
-  @Prop({ required: true })
+  @Prop({ unique: true, required: true })
   name: UUID;
 
 }

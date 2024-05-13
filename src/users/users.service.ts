@@ -1,11 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { MongoServerError } from 'mongodb';
 import { Model } from 'mongoose';
 import { EmailService } from 'src/email/email.service';
+import { EventProducerService } from 'src/queue/event-producer/event-producer.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
-import { EventProducerService } from 'src/queue/event-producer/event-producer.service';
 
 @Injectable()
 export class UsersService {
@@ -18,7 +19,18 @@ export class UsersService {
 
   async create(createUserDto: CreateUserDto): Promise<User> {
     const createdUser = new this.userModel(createUserDto);
-    const savedUser = await createdUser.save();
+    let savedUser: User;
+    try {
+      savedUser = await createdUser.save();
+    } catch (error) {
+      if (error instanceof MongoServerError) {
+        let mongoServerError: MongoServerError = error;
+        if (mongoServerError.code == 11000) {
+          throw new ConflictException("email is already registered");
+        }
+      }
+      throw error;
+    }
     this.emailService.sendUserWelcome(savedUser);
     this.eventProducerService.addUserToRegistrationQueue(savedUser);
     return savedUser;
