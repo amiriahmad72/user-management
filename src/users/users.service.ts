@@ -7,12 +7,14 @@ import { EventProducerService } from 'src/queue/event-producer/event-producer.se
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
+import { AvatarService } from './avatar/avatar.service';
 
 @Injectable()
 export class UsersService {
 
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<User>,
+    private readonly avatarService: AvatarService,
     private readonly emailService: EmailService,
     private readonly eventProducerService: EventProducerService
   ) { }
@@ -57,6 +59,7 @@ export class UsersService {
   }
 
   async remove(id: string): Promise<User> {
+    await this.avatarService.deleteAvatarIfExists(id);
     const deletedUser = await this.userModel.findByIdAndDelete(id);
     if (!deletedUser) {
       throw new NotFoundException(`User (id=${id}) not found`)

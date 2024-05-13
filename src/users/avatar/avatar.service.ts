@@ -23,7 +23,7 @@ export class AvatarService {
     return this.findFileAndGetBase64(userId);
   }
 
-  private async deleteAvatarIfExists(userId: string) {
+  async deleteAvatarIfExists(userId: string) {
     const deletedAvatar = await this.avatarModel.findOneAndDelete({ userId });
     if (deletedAvatar) {
       const filePath = this.baseDirectoryPath + deletedAvatar.name;
