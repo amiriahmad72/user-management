@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { UUID, createHash, randomUUID } from 'node:crypto';
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, rmSync, writeFileSync, existsSync } from 'node:fs';
 import { Avatar } from './entities/avatar.entity';
 
 @Injectable()
@@ -16,14 +16,21 @@ export class AvatarService {
   }
 
   async findOrSaveAvatar(userId: string, file?: Express.Multer.File): Promise<string | null> {
-    const avatar = await this.avatarModel.findOne({ userId });
-    if (avatar) {
-      return this.findFileAndGetBase64(avatar);
+    if (file) {
+      await this.deleteAvatarIfExists(userId);
+      return this.saveAvatar(userId, file);
     }
-    if (!file) {
-      throw new NotFoundException(`Avatar (userId=${userId}) not found`);
+    return this.findFileAndGetBase64(userId);
+  }
+
+  private async deleteAvatarIfExists(userId: string) {
+    const deletedAvatar = await this.avatarModel.findOneAndDelete({ userId });
+    if (deletedAvatar) {
+      const filePath = this.baseDirectoryPath + deletedAvatar.name;
+      if (existsSync(filePath)) {
+        rmSync(filePath);
+      }
     }
-    return this.saveAvatar(userId, file);
   }
 
   private async saveAvatar(userId: string, file: Express.Multer.File): Promise<string> {
@@ -38,12 +45,16 @@ export class AvatarService {
     return file.buffer.toString('base64');
   }
 
-  private findFileAndGetBase64(avatar: Avatar): string {
-    const file: Buffer = readFileSync(this.baseDirectoryPath + avatar.name);
-    if (!file) {
-      throw new NotFoundException('file not found');
+  private async findFileAndGetBase64(userId: string): Promise<string> {
+    const avatar = await this.avatarModel.findOne({ userId });
+    if (avatar) {
+      const filePath = this.baseDirectoryPath + avatar.name;
+      if (existsSync(filePath)) {
+        const file: Buffer = readFileSync(filePath);
+        return file.toString('base64');
+      }
     }
-    return file.toString('base64');
+    throw new NotFoundException(`Avatar (userId=${userId}) not found`);
   }
 
   async deleteAvatar(userId: string) {
