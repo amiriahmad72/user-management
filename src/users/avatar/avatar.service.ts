@@ -1,16 +1,19 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { UUID, createHash, randomUUID } from 'node:crypto';
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { Avatar } from './entities/avatar.entity';
 
-const FILES_PATH = './avatars/';
-
 @Injectable()
 export class AvatarService {
 
-  constructor(@InjectModel(Avatar.name) private readonly avatarModel: Model<Avatar>) { }
+  baseDirectoryPath: string;
+
+  constructor(@InjectModel(Avatar.name) private readonly avatarModel: Model<Avatar>, private readonly configService: ConfigService) {
+    this.baseDirectoryPath = this.configService.get<string>('UPLOADED_AVATARS_PATH', './avatars');
+  }
 
   async findOrSaveAvatar(userId: string, file?: Express.Multer.File): Promise<string | null> {
     const avatar = await this.avatarModel.findOne({ userId });
@@ -25,8 +28,8 @@ export class AvatarService {
 
   private async saveAvatar(userId: string, file: Express.Multer.File): Promise<string> {
     const name: UUID = randomUUID();
-    mkdirSync(FILES_PATH, { recursive: true });
-    writeFileSync(FILES_PATH + name, file.buffer);
+    mkdirSync(this.baseDirectoryPath, { recursive: true });
+    writeFileSync(this.baseDirectoryPath + name, file.buffer);
     const hashAlgorithm = createHash('md5');
     hashAlgorithm.update(file.buffer);
     const hash = hashAlgorithm.digest('hex');
@@ -36,7 +39,7 @@ export class AvatarService {
   }
 
   private findFileAndGetBase64(avatar: Avatar): string {
-    const file: Buffer = readFileSync(FILES_PATH + avatar.name);
+    const file: Buffer = readFileSync(this.baseDirectoryPath + avatar.name);
     if (!file) {
       throw new NotFoundException('file not found');
     }
@@ -48,7 +51,7 @@ export class AvatarService {
     if (!deletedAvatar) {
       throw new NotFoundException(`Avatar (userId=${userId}) not found`);
     }
-    rmSync(FILES_PATH + deletedAvatar.name);
+    rmSync(this.baseDirectoryPath + deletedAvatar.name);
   }
 
 }
