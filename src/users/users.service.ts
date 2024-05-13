@@ -18,24 +18,24 @@ export class UsersService {
     return this.userModel.find();
   }
 
-  findOne(id: string) {
-    const user = this.userModel.findById(id);
+  async findOne(id: string): Promise<User> {
+    const user = await this.userModel.findById(id);
     if (!user) {
       throw new NotFoundException(`Useer (id=${id}) not found`)
     }
     return user;
   }
 
-  update(id: string, updateUserDto: UpdateUserDto) {
-    const updatedUser = this.userModel.findByIdAndUpdate(id, updateUserDto, {new: true});
+  async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+    const updatedUser = await this.userModel.findByIdAndUpdate(id, updateUserDto, {new: true});
     if (!updatedUser) {
       throw new NotFoundException(`Useer (id=${id}) not found`)
     }
     return updatedUser;
   }
 
-  remove(id: string) {
-    const deletedUser = this.userModel.findByIdAndDelete(id);
+  async remove(id: string): Promise<User> {
+    const deletedUser = await this.userModel.findByIdAndDelete(id);
     if (!deletedUser) {
       throw new NotFoundException(`Useer (id=${id}) not found`)
     }
