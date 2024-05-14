@@ -2,8 +2,8 @@ import { ConflictException, Injectable, NotFoundException } from '@nestjs/common
 import { InjectModel } from '@nestjs/mongoose';
 import { MongoServerError } from 'mongodb';
 import { Model } from 'mongoose';
-import { EmailService } from 'src/email/email.service';
-import { EventProducerService } from 'src/queue/event-producer/event-producer.service';
+import { EmailService } from '../email/email.service';
+import { EventProducerService } from '../queue/event-producer/event-producer.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
