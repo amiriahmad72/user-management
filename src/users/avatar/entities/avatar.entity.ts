@@ -5,7 +5,7 @@ import { Document, HydratedDocument } from 'mongoose';
 export type AvatarDocument = HydratedDocument<Avatar>;
 
 @Schema()
-export class Avatar extends Document {
+export class Avatar {
 
   @Prop({ unique: true, required: true })
   userId: string;

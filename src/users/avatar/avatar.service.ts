@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { UUID, createHash, randomUUID } from 'node:crypto';
-import { mkdirSync, readFileSync, rmSync, writeFileSync, existsSync } from 'node:fs';
+import { mkdirSync, readFileSync, rmSync, writeFileSync, existsSync } from 'fs';
 import { Avatar } from './entities/avatar.entity';
 
 @Injectable()
@@ -12,7 +12,7 @@ export class AvatarService {
   baseDirectoryPath: string;
 
   constructor(@InjectModel(Avatar.name) private readonly avatarModel: Model<Avatar>, private readonly configService: ConfigService) {
-    this.baseDirectoryPath = this.configService.get<string>('UPLOADED_AVATARS_PATH', './avatars');
+    this.baseDirectoryPath = this.configService.get<string>('UPLOADED_AVATARS_PATH', './avatars/');
   }
 
   async findOrSaveAvatar(userId: string, file?: Express.Multer.File): Promise<string | null> {

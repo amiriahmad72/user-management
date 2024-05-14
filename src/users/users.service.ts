@@ -59,12 +59,12 @@ export class UsersService {
   }
 
   async remove(id: string): Promise<User> {
-    await this.avatarService.deleteAvatarIfExists(id);
     const deletedUser = await this.userModel.findByIdAndDelete(id);
-    if (!deletedUser) {
-      throw new NotFoundException(`User (id=${id}) not found`)
+    if (deletedUser) {
+      await this.avatarService.deleteAvatarIfExists(id);
+      return deletedUser;
     }
-    return deletedUser;
+    throw new NotFoundException(`User (id=${id}) not found`)
   }
 
 }
